@@ -43,21 +43,23 @@ docker compose exec web python manage.py seed_demo
 编辑 `.env`，设置 `AI_MOCK=False` 并填写 Key。对话、视觉、向量可以分别使用不同厂商：
 
 ```ini
+# 示例：阿里云百炼（一个 Key 同时提供对话、视觉、向量，已实测可用）
 AI_MOCK=False
-LLM_BASE_URL=https://api.deepseek.com/v1
+LLM_BASE_URL=https://dashscope.aliyuncs.com/compatible-mode/v1
 LLM_API_KEY=sk-...
-LLM_MODEL=deepseek-chat
-
-VISION_BASE_URL=https://dashscope.aliyuncs.com/compatible-mode/v1
-VISION_API_KEY=sk-...
+LLM_MODEL=qwen-plus
 VISION_MODEL=qwen-vl-max
+EMBEDDING_MODEL=text-embedding-v4     # 必须支持 1024 维输出
 
-EMBEDDING_BASE_URL=https://dashscope.aliyuncs.com/compatible-mode/v1
-EMBEDDING_API_KEY=sk-...
-EMBEDDING_MODEL=text-embedding-v3     # 必须支持 1024 维输出
+# 也可以分别使用不同厂商，例如对话用 DeepSeek：
+# LLM_BASE_URL=https://api.deepseek.com/v1
+# LLM_MODEL=deepseek-chat
+# VISION_BASE_URL / VISION_API_KEY、EMBEDDING_BASE_URL / EMBEDDING_API_KEY 单独指定
 ```
 
-未配置 `VISION_MODEL` / `EMBEDDING_MODEL` 时对应能力自动退回 Mock。切换向量模型后执行
+未配置 `VISION_MODEL` / `EMBEDDING_MODEL` 时对应能力自动退回 Mock。
+
+百炼实测耗时（2026-09）：询价解析 3–6 秒、识图约 3.5 秒、列映射约 2.6 秒、报价邮件约 9 秒、上架文案约 15 秒；一次完整演示约 25 次调用、token 合计约 1.2 万。切换向量模型后执行
 `python manage.py build_embeddings --all` 重建向量。所有调用记录在后台「AI 调用日志」，提示词可在「提示词模板」中新建版本调优。
 
 ## 演示脚本（约 8 分钟）

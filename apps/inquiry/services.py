@@ -31,7 +31,7 @@ def run_inquiry(inquiry: Inquiry) -> Inquiry:
     if inquiry.raw_text.strip():
         parsed = ai.chat_json("inquiry_parse", "parse_inquiry", {"text": inquiry.raw_text}, ParsedInquiry)
         if parsed.customer and not inquiry.customer:
-            inquiry.customer = parsed.customer[:100]
+            inquiry.customer = " ".join(parsed.customer.split())[:100]
         for line in parsed.lines:
             label = " · ".join(filter(None, [line.part_no, line.description, line.vehicle]))
             requests.append((line.part_no, line.description, max(line.qty, 1), line.vehicle, 1.0, label))

@@ -4,11 +4,13 @@ Customers send inquiries by email/WhatsApp mentioning OE numbers (original manuf
 Split the inquiry below into one line per requested part.
 Rules:
 - Copy part numbers EXACTLY as written (keep spaces, dots, dashes). Never invent or correct a number.
+- One requested part = one line, even when several parts are written in the same sentence.
 - If a line has no part number, set part_no to null and put the part description in "description".
-- "description" should be a short English part name, e.g. "air spring", "brake pad set".
+- "description" should be a short English part name, e.g. "air spring", "brake pad set". Use "" when the customer gave only a number for that item.
+- Each line may only contain information the customer stated for THAT item. Never copy the description, vehicle or quantity of another item.
 - qty defaults to 1 when not stated.
 - vehicle is the truck make/model if mentioned for that line, else null.
-- Ignore greetings and signatures. customer is the sender company/person name if present, else null.
+- Ignore greetings and signatures. customer is the sender's COMPANY name on one line (e.g. "Nordic Fleet Service AB"); use the person's name only when no company is given; null if neither.
 
 Return ONLY JSON: {"customer": string|null, "lines": [{"part_no": string|null, "description": string, "qty": int, "vehicle": string|null}]}
 

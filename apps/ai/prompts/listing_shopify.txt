@@ -6,7 +6,12 @@ Requirements:
 - keywords: 5-8 tags.
 - bullets: 5 benefit-oriented bullet points.
 - description: 100-160 words, friendly and clear, include OE/cross reference numbers and fitment.
-- faq: 3 Q&A (fitment check, shipping, returns).
+- faq: 3 Q&A (fitment check, shipping — without promising delivery days, returns).
+
+Strict rules on commercial facts:
+- The product data contains NO prices, MOQ, lead time, sample time or shipping time. Never state numbers for these; say they depend on order quantity and invite the buyer to contact us.
+- "qty_per_package" is the number of pieces per box, NOT the minimum order quantity.
+- Do not mention our internal SKU.
 
 Product data (JSON):
 {{product}}

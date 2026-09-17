@@ -24,6 +24,7 @@ def validate(listing: ListingContent) -> list[str]:
         warnings.append(f"Alibaba 需要 3 个关键词，当前 {len(listing.keywords)} 个")
     known = {pn.normalized for pn in listing.product.part_numbers.all()}
     text = " ".join([listing.title, listing.description, *listing.bullets, *listing.keywords, *(f"{f['q']} {f['a']}" for f in listing.faq)])
+    text = re.sub(re.escape(listing.product.sku), " ", text, flags=re.I)  # our own SKU is not a part number
     unknown = sorted({m.strip() for m in NUMBER_TOKEN.findall(text) if len(normalize_part_no(m)) >= 5 and normalize_part_no(m) not in known})
     # Spec values such as "430 mm" also look numeric; only warn on tokens that resemble part numbers.
     unknown = [u for u in unknown if sum(c.isdigit() for c in u) >= 5]

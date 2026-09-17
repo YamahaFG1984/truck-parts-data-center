@@ -17,7 +17,10 @@ EXACT, FUZZY, SEMANTIC = "exact", "fuzzy", "semantic"
 METHOD_LABELS = {EXACT: "精确号码", FUZZY: "模糊号码", SEMANTIC: "语义匹配"}
 TOP_N = 5
 FUZZY_MIN_RATIO = 75
-SEMANTIC_MIN_SIMILARITY = 0.12
+# Real embedding models put almost any two truck-part texts above ~0.5 cosine similarity,
+# while the mock hashing embedding rarely does; scores are spread over [floor, 1].
+SEMANTIC_FLOOR = 0.5
+SEMANTIC_FLOOR_MOCK = 0.1
 
 
 @dataclass
@@ -93,12 +96,14 @@ def match_text(text: str, category_hint: str | None = None) -> list[Candidate]:
         .annotate(distance=CosineDistance("embedding", vector))
         .order_by("distance")[:TOP_N]
     )
+    floor = SEMANTIC_FLOOR_MOCK if ai.is_mock("embedding") else SEMANTIC_FLOOR
     results = []
     for product in qs:
         similarity = 1 - product.distance
-        if similarity < SEMANTIC_MIN_SIMILARITY:
+        if similarity < floor:
             continue
-        results.append(Candidate(product.id, max(60, min(80, round(60 + similarity * 20))), SEMANTIC, note=f"相似度 {similarity:.2f}"))
+        score = round(60 + (similarity - floor) / (1 - floor) * 20)
+        results.append(Candidate(product.id, max(60, min(80, score)), SEMANTIC, note=f"相似度 {similarity:.2f}"))
     return results
 
 
