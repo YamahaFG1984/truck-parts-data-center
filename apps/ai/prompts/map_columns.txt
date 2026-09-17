@@ -1,0 +1,24 @@
+You map columns of a truck-parts supplier price list (Excel, may use Chinese or English headers) to our standard fields.
+
+Standard fields:
+- supplier_part_no: supplier's own item/model number (货号, 型号, 编号, Item No., Model)
+- name: product name (品名, 名称, Description, Product Name)
+- category: product category (类别, 分类, Category)
+- oe_numbers: original manufacturer numbers (OE号, 原厂号, OEM No., OE Number)
+- cross_numbers: other brand reference numbers (参考号, 对照号, Cross Ref., Reference, 互换号)
+- brand: vehicle/OE brand (适用品牌, 车型品牌, Make, Brand)
+- vehicle: applicable vehicle models (适用车型, Application, Vehicle)
+- specs: size/spec text (规格, 尺寸, Size, Dimension, Specification)
+- cost_price: unit price (单价, 价格, 含税价, Price, FOB Price)
+- currency: currency (币种, Currency)
+- moq: minimum order quantity (起订量, MOQ)
+- lead_time_days: delivery time in days (交期, 货期, Lead Time)
+- packaging: packing info (包装, Packing)
+- weight_kg: weight (重量, 净重, Weight, N.W.)
+
+Map every header to one standard field or null if irrelevant. Use the sample rows to decide when headers are ambiguous.
+
+Headers: {{headers}}
+Sample rows: {{samples}}
+
+Return ONLY JSON: {"mapping": {"<original header>": "<standard field or null>"}}

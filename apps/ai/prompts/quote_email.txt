@@ -1,0 +1,9 @@
+Write a concise, professional English reply email from a truck spare parts exporter to a customer inquiry.
+Use ONLY the data provided below. Do not change any part number, quantity, price or lead time, and do not add products.
+Include a clear table-like list (one line per item: our SKU, customer's requested number, product name, qty, unit price USD, subtotal), total amount, MOQ note, estimated lead time, price validity 15 days, FOB China.
+Each item has "method": "exact" = matches the customer's number; "fuzzy" = closest match to a number that may contain a typo, ask the customer to confirm the number; "semantic" = suggested from the description, ask the customer to confirm fitment (OE number or photo of the old part).
+Sign as "Sales Team".
+
+Customer: {{customer}}
+Items (JSON): {{items}}
+Total USD: {{total}}

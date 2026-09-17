@@ -1,0 +1,31 @@
+{% extends "base.html" %}
+{% block title %}合并重复 SKU{% endblock %}
+{% block heading %}合并重复 SKU{% endblock %}
+{% block subheading %}选择要保留的 SKU：另一个 SKU 的号码、适配车型、供应商报价、图片会迁移过来，之后被归档（不删除，可追溯）{% endblock %}
+{% block content %}
+<form method="post">{% csrf_token %}
+<div class="grid grid-cols-2 gap-6">
+  {% for p in pair %}
+  <label class="bg-white rounded-lg border-2 border-slate-200 p-5 block cursor-pointer has-[:checked]:border-emerald-500">
+    <div class="flex items-center gap-2 mb-3">
+      <input type="radio" name="keep" value="{{ p.pk }}" {% if forloop.first %}checked{% endif %}>
+      <span class="font-mono text-sky-700">{{ p.sku }}</span><span class="font-semibold">{{ p.name_en|default:p.name_cn }}</span>
+      <span class="ml-auto text-xs">完整度 {{ p.completeness_score }}</span>
+    </div>
+    <div class="text-xs space-y-1.5">
+      <div><span class="text-slate-500">中文名：</span>{{ p.name_cn|default:"—" }}</div>
+      <div><span class="text-slate-500">号码：</span><span class="font-mono">{% for pn in p.part_numbers.all %}{{ pn.brand.name }} {{ pn.number }}{% if not forloop.last %}; {% endif %}{% empty %}—{% endfor %}</span></div>
+      <div><span class="text-slate-500">适配：</span>{% for f in p.fitments.all %}{{ f.vehicle_model }}{% if not forloop.last %}; {% endif %}{% empty %}—{% endfor %}</div>
+      <div><span class="text-slate-500">规格：</span>{{ p.specs }}</div>
+      <div><span class="text-slate-500">报价：</span>{{ p.offers.all|length }} 条 · 图片 {{ p.images.all|length }} 张</div>
+      <div><span class="text-slate-500">创建：</span>{{ p.created_at|date:"Y-m-d" }}</div>
+    </div>
+  </label>
+  {% endfor %}
+</div>
+<div class="mt-6 flex gap-3">
+  <button class="bg-emerald-600 text-white rounded px-5 py-2">确认合并</button>
+  <a href="{% url 'quality:dashboard' %}" class="border border-slate-300 rounded px-5 py-2 bg-white">取消</a>
+</div>
+</form>
+{% endblock %}

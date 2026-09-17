@@ -1,0 +1,79 @@
+{% extends "base.html" %}
+{% block title %}询价工作台{% endblock %}
+{% block heading %}⚡ 询价工作台{% endblock %}
+{% block subheading %}粘贴客户邮件 / WhatsApp 消息 / 零件号，或上传配件照片 —— 自动拆行、匹配产品与替代件、给出成本与建议售价{% endblock %}
+{% block actions %}<a href="{% url 'inquiry:history' %}" class="border border-slate-300 rounded px-3 py-1.5 bg-white">询价历史</a>{% endblock %}
+{% block content %}
+<div class="grid grid-cols-3 gap-6">
+  <form method="post" enctype="multipart/form-data" class="col-span-2 bg-white rounded-lg border border-slate-200 p-5 space-y-4" hx-boost="false" onsubmit="document.getElementById('submitting').classList.remove('hidden')">
+    {% csrf_token %}
+    {% if samples %}
+    <div>
+      <div class="text-xs text-slate-500 mb-1.5">演示样例（一键填入）：</div>
+      <div class="flex flex-wrap gap-2">
+        {% for s in samples %}
+        <button type="button" class="sample text-xs border border-sky-300 text-sky-800 bg-sky-50 rounded px-2 py-1 hover:bg-sky-100"
+          data-text="{{ s.text }}" data-customer="{{ s.customer }}" data-channel="{{ s.channel }}">{{ s.title }}</button>
+        {% endfor %}
+      </div>
+    </div>
+    {% endif %}
+    <div class="grid grid-cols-2 gap-3">
+      <label class="block"><span class="text-xs text-slate-500">客户</span>
+        <input name="customer" id="customer" class="mt-1 w-full border border-slate-300 rounded px-3 py-2" placeholder="可留空，AI 会从邮件签名识别"></label>
+      <label class="block"><span class="text-xs text-slate-500">渠道</span>
+        <select name="channel" id="channel" class="mt-1 w-full border border-slate-300 rounded px-3 py-2">
+          {% for v, l in channels %}<option value="{{ v }}">{{ l }}</option>{% endfor %}
+        </select></label>
+    </div>
+    <label class="block"><span class="text-xs text-slate-500">询价内容</span>
+      <textarea name="raw_text" id="raw_text" rows="10" class="mt-1 w-full border border-slate-300 rounded px-3 py-2 font-mono text-xs" placeholder="例如：&#10;Please quote:&#10;1. OE 81.50804-6004 x 20&#10;2. air spring for Volvo FH, 6 pcs"></textarea></label>
+    <div class="grid grid-cols-2 gap-3">
+      <label class="block"><span class="text-xs text-slate-500">上传配件照片（可选）</span>
+        <input type="file" name="image" accept="image/*" class="mt-1 block w-full text-xs"></label>
+      {% if demo_photos %}
+      <label class="block"><span class="text-xs text-slate-500">或使用演示照片</span>
+        <select name="demo_photo" class="mt-1 w-full border border-slate-300 rounded px-3 py-2">
+          <option value="">— 不使用 —</option>
+          {% for p in demo_photos %}<option value="{{ p }}">{{ p }}</option>{% endfor %}
+        </select></label>
+      {% endif %}
+    </div>
+    <div class="flex items-center gap-3">
+      <button class="bg-sky-600 hover:bg-sky-700 text-white rounded px-5 py-2 font-medium">开始匹配</button>
+      <span id="submitting" class="hidden text-sky-700 text-xs">⏳ AI 正在解析询价并匹配产品库…</span>
+    </div>
+  </form>
+
+  <div class="space-y-4">
+    <div class="bg-white rounded-lg border border-slate-200 p-5">
+      <h2 class="font-semibold mb-2">匹配逻辑（分层）</h2>
+      <ol class="text-xs text-slate-600 space-y-1.5 list-decimal list-inside">
+        <li><b>AI 解析</b>：把邮件拆成「号码 / 描述 / 数量 / 车型」</li>
+        <li><b>精确号码</b>：去空格横杠后比对 OE / Cross / 供应商号 → 100 分</li>
+        <li><b>模糊号码</b>：客户写错 1-2 位也能找到 → 80-95 分</li>
+        <li><b>语义匹配</b>：只有描述或照片时按名称/车型/规格检索 → 60-80 分</li>
+        <li><b>价格</b>：只取系统中供应商成本 × 品类毛利率，AI 不参与定价</li>
+      </ol>
+    </div>
+    <div class="bg-white rounded-lg border border-slate-200 p-5">
+      <h2 class="font-semibold mb-2">最近询价</h2>
+      <ul class="text-xs space-y-2">
+        {% for i in recent %}
+        <li><a class="text-sky-700 hover:underline" href="{% url 'inquiry:detail' i.pk %}">#{{ i.pk }} {{ i.customer|default:"未知客户" }}</a>
+          <span class="text-slate-400">· {{ i.lines.all|length }} 行 · {{ i.elapsed_ms }}ms · {{ i.created_at|date:"m-d H:i" }}</span></li>
+        {% empty %}<li class="text-slate-400">暂无</li>{% endfor %}
+      </ul>
+    </div>
+  </div>
+</div>
+{% endblock %}
+{% block scripts %}
+<script>
+document.querySelectorAll('.sample').forEach(btn => btn.addEventListener('click', () => {
+  document.getElementById('raw_text').value = btn.dataset.text;
+  document.getElementById('customer').value = btn.dataset.customer;
+  document.getElementById('channel').value = btn.dataset.channel;
+}));
+</script>
+{% endblock %}

@@ -1,0 +1,20 @@
+[
+  {
+    "title": "邮件询价：精确号 + 写错的号 + 只有描述",
+    "customer": "Nordic Fleet Service AB",
+    "channel": "email",
+    "text": "Dear Sales,\n\nPlease quote your best price for the following:\n1. OE 5007-151-820 - 20 pcs\n2. 20749120 qty 10\n3. Rear axle air spring for Volvo FH, 6 pcs\n\nBest regards,\nErik Johansson\nNordic Fleet Service AB"
+  },
+  {
+    "title": "WhatsApp：竞品 Cross 号询价",
+    "customer": "Lagos Truck Parts Ltd",
+    "channel": "whatsapp",
+    "text": "Hi, need price for\nDonaldson P703120 x 50\nDonaldson P036915 x 50\nThanks"
+  },
+  {
+    "title": "Alibaba 询盘：只有描述和车型",
+    "customer": "Andes Heavy Equipment",
+    "channel": "alibaba",
+    "text": "Hello, we are looking for front brake disc for Scania R-series 430mm, 20 pcs.\nAlso cabin shock absorber for MAN TGX, 10 pcs.\nPlease send catalog."
+  }
+]

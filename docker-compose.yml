@@ -1,0 +1,47 @@
+services:
+  db:
+    image: pgvector/pgvector:pg16
+    environment:
+      POSTGRES_DB: truckparts
+      POSTGRES_USER: truckparts
+      POSTGRES_PASSWORD: truckparts
+    ports:
+      - "127.0.0.1:5440:5432"
+    volumes:
+      - pgdata:/var/lib/postgresql/data
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U truckparts"]
+      interval: 5s
+      retries: 10
+
+  web:
+    build: .
+    image: truck-parts-data-center:latest
+    command: python manage.py runserver 0.0.0.0:8000
+    env_file: .env
+    environment:
+      DATABASE_URL: postgres://truckparts:truckparts@db:5432/truckparts
+      Q_SYNC: "False"
+    ports:
+      - "8010:8000"
+    volumes:
+      - .:/app
+    depends_on:
+      db:
+        condition: service_healthy
+
+  worker:
+    image: truck-parts-data-center:latest
+    command: python manage.py qcluster
+    env_file: .env
+    environment:
+      DATABASE_URL: postgres://truckparts:truckparts@db:5432/truckparts
+      Q_SYNC: "False"
+    volumes:
+      - .:/app
+    depends_on:
+      db:
+        condition: service_healthy
+
+volumes:
+  pgdata:

@@ -1,0 +1,49 @@
+{% load ui %}{% with line=row.line %}
+<div class="bg-white rounded-lg border border-slate-200">
+  <div class="px-4 py-3 border-b border-slate-100 flex items-center gap-3">
+    <span class="bg-slate-800 text-white rounded-full w-6 h-6 text-xs flex items-center justify-center">{{ line.position|add:1 }}</span>
+    <div class="flex-1">
+      <div class="font-medium">{{ line.query }}</div>
+      <div class="text-xs text-slate-500">
+        号码：<span class="font-mono">{{ line.parsed.part_no|default:"—" }}</span> · 描述：{{ line.parsed.description|default:"—" }}{% if line.parsed.vehicle %} · 车型：{{ line.parsed.vehicle }}{% endif %}
+      </div>
+    </div>
+    <form hx-post="{% url 'inquiry:select' inquiry.pk line.pk %}" hx-target="#line-{{ line.pk }}" hx-trigger="change" class="text-xs flex items-center gap-1">
+      数量 <input type="number" min="1" name="qty" value="{{ line.qty }}" class="w-20 border border-slate-300 rounded px-2 py-1">
+    </form>
+    <div id="feedback-{{ line.pk }}">{% include "inquiry/_feedback.html" %}</div>
+  </div>
+  <div class="divide-y divide-slate-100">
+    {% for c in row.candidates %}{% with p=c.product pr=c.pricing %}
+    <div class="px-4 py-3 flex gap-3 {% if line.selected_product_id == c.product_id %}bg-emerald-50{% endif %}">
+      <form hx-post="{% url 'inquiry:select' inquiry.pk line.pk %}" hx-target="#line-{{ line.pk }}" class="pt-3">
+        <input type="hidden" name="product_id" value="{% if line.selected_product_id == c.product_id %}{% else %}{{ c.product_id }}{% endif %}">
+        <button title="选择/取消" class="w-5 h-5 rounded-full border-2 {% if line.selected_product_id == c.product_id %}border-emerald-600 bg-emerald-600{% else %}border-slate-300 hover:border-emerald-500{% endif %}"></button>
+      </form>
+      {% with img=p.primary_image %}{% if img %}<img src="{{ img.image.url }}" class="w-16 h-16 rounded object-cover border">{% else %}<div class="w-16 h-16 rounded bg-slate-100 text-slate-400 text-[10px] flex items-center justify-center">无图</div>{% endif %}{% endwith %}
+      <div class="flex-1 min-w-0">
+        <div class="flex items-center gap-2">
+          <a href="{% url 'catalog:detail' p.pk %}" target="_blank" class="font-mono text-sky-700 hover:underline">{{ p.sku }}</a>
+          <span class="font-medium truncate">{{ p.name_en|default:p.name_cn }}</span>
+          <span class="rounded px-1.5 py-0.5 text-xs font-semibold {{ c.score|score_class }}">{{ c.method|method_label }} {{ c.score }}</span>
+        </div>
+        {% if c.matched_number %}<div class="text-xs text-slate-600">命中号码：<span class="font-mono bg-yellow-100 px-1">{{ c.matched_number }}</span></div>{% endif %}
+        {% if c.note %}<div class="text-xs text-slate-500">{{ c.note }}</div>{% endif %}
+        <div class="text-xs text-slate-500 mt-0.5 font-mono truncate">OE: {% for pn in p.oe_numbers|slice:":3" %}{{ pn.number }}{% if not forloop.last %}, {% endif %}{% empty %}—{% endfor %} · Cross: {% for pn in p.cross_numbers|slice:":3" %}{{ pn.brand.name }} {{ pn.number }}{% if not forloop.last %}, {% endif %}{% empty %}—{% endfor %}</div>
+        <div class="text-xs text-slate-500 truncate">适配：{% for f in p.fitments.all|slice:":3" %}{{ f.vehicle_model }}{% if not forloop.last %}; {% endif %}{% empty %}—{% endfor %}</div>
+      </div>
+      <div class="w-48 text-right text-xs shrink-0">
+        {% if pr.best %}
+          <div class="text-base font-semibold text-emerald-700">USD {{ pr.suggested_price_usd }}</div>
+          <div class="text-slate-500">成本 {{ pr.best.offer.cost_price }} {{ pr.best.offer.currency }} · {{ pr.offers|length }} 家报价</div>
+          <div class="text-slate-500">MOQ {{ pr.best.offer.moq|default:"—" }} · 交期 {{ pr.best.offer.lead_time_days|default:"—" }} 天</div>
+          {% if pr.stale %}<div class="text-amber-600">报价已过期</div>{% endif %}
+        {% else %}<div class="text-rose-600">无报价，需询价采购</div>{% endif %}
+      </div>
+    </div>
+    {% endwith %}{% empty %}
+    <div class="px-4 py-4 text-rose-600 text-xs">未找到匹配产品 —— 可记录为新品开发线索</div>
+    {% endfor %}
+  </div>
+</div>
+{% endwith %}

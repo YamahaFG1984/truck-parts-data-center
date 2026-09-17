@@ -1,0 +1,16 @@
+<div class="border border-violet-200 bg-violet-50 rounded p-3 mb-3 text-xs">
+  {% if error %}<div class="text-rose-600">AI 调用失败：{{ error }}</div>
+  {% elif suggestions %}
+  <form hx-post="{% url 'quality:fill' product.pk %}" hx-target="#fill-panel" class="space-y-3">
+    {% for field, s in suggestions.items %}
+    <div>
+      <label class="flex items-center gap-2 font-semibold"><input type="checkbox" name="accept_{{ field }}" checked> {% if field == 'name_en' %}英文名{% else %}英文描述{% endif %}</label>
+      <textarea name="{{ field }}" rows="{% if field == 'name_en' %}1{% else %}5{% endif %}" class="w-full border border-violet-200 rounded p-1.5 mt-1">{{ s.value }}</textarea>
+      <div class="text-violet-700">依据：{{ s.reason }}</div>
+    </div>
+    {% endfor %}
+    <button class="bg-violet-600 text-white rounded px-3 py-1">接受选中的建议</button>
+    <span class="text-slate-500">AI 只能补文字字段，号码/价格/适配不会被 AI 修改</span>
+  </form>
+  {% else %}<div class="text-slate-600">英文名和描述已完整，无需补全。</div>{% endif %}
+</div>

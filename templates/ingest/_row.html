@@ -1,0 +1,46 @@
+{% load ui %}
+<td class="px-3 py-2 text-slate-400">{{ row.row_index }}</td>
+<td class="py-2 pr-3">
+  {% for k, v in row.raw.items %}{% if v %}<div class="truncate max-w-xs"><span class="text-slate-400">{{ k }}:</span> {{ v }}</div>{% endif %}{% endfor %}
+</td>
+<td class="py-2 pr-3 space-y-0.5">
+  {% with e=row.extracted %}
+  {% if e.supplier_part_no %}<div><span class="text-slate-400">料号</span> <span class="font-mono">{{ e.supplier_part_no }}</span></div>{% endif %}
+  {% if e.name %}<div><span class="text-slate-400">名称</span> {{ e.name }}</div>{% endif %}
+  {% if e.oe_numbers %}<div><span class="text-slate-400">OE</span> <span class="font-mono">{{ e.oe_numbers|join:", " }}</span></div>{% endif %}
+  {% if e.cross_numbers %}<div><span class="text-slate-400">Cross</span> <span class="font-mono">{{ e.cross_numbers|join:", " }}</span></div>{% endif %}
+  {% if e.cost_price %}<div><span class="text-slate-400">价格</span> {{ e.cost_price }} {{ e.currency }} · MOQ {{ e.moq|default:"—" }} · 交期 {{ e.lead_time_days|default:"—" }}天</div>{% endif %}
+  {% endwith %}
+  {% for err in row.errors %}<div class="text-rose-600">⚠ {{ err }}</div>{% endfor %}
+</td>
+<td class="py-2 pr-3">
+  {% if row.matched_product %}{% with p=row.matched_product %}
+    <div class="flex items-center gap-2">
+      <a class="font-mono text-sky-700 hover:underline" target="_blank" href="{% url 'catalog:detail' p.pk %}">{{ p.sku }}</a>
+      <span class="rounded px-1.5 py-0.5 font-semibold {{ row.confidence|score_class }}">{{ row.match_method|method_label }} {{ row.confidence }}</span>
+    </div>
+    <div>{{ p.name_en|default:p.name_cn }} <span class="text-slate-400">· {{ p.category.name }}</span></div>
+    <div class="font-mono text-slate-500 truncate max-w-xs">{% for pn in p.oe_numbers|slice:":2" %}{{ pn.number }} {% endfor %}</div>
+  {% endwith %}{% else %}<span class="text-slate-400">未匹配</span>{% endif %}
+</td>
+<td class="py-2 pr-3">
+  {% if error %}<div class="text-rose-600 mb-1">{{ error }}</div>{% endif %}
+  {% if row.status == 'pending' %}
+  <form hx-post="{% url 'ingest:row_action' row.pk %}" hx-target="#row-{{ row.pk }}" class="space-y-1.5">
+    <div class="flex gap-1">
+      {% if row.matched_product %}<button name="action" value="approve" class="flex-1 rounded px-2 py-1 {% if row.preselected %}bg-emerald-600 text-white{% else %}border border-emerald-600 text-emerald-700{% endif %}">通过</button>{% endif %}
+      <button name="action" value="new" class="flex-1 rounded px-2 py-1 border border-violet-500 text-violet-700">新建 SKU</button>
+      <button name="action" value="reject" class="rounded px-2 py-1 border border-slate-300 text-slate-600">驳回</button>
+    </div>
+    <div class="flex gap-1">
+      <input name="product_sku" placeholder="改为 SKU，如 FIT-00012" class="flex-1 border border-slate-300 rounded px-2 py-1">
+      <button name="action" value="approve" class="rounded px-2 py-1 border border-slate-300">指定</button>
+    </div>
+  </form>
+  {% else %}
+  <form hx-post="{% url 'ingest:row_action' row.pk %}" hx-target="#row-{{ row.pk }}" class="flex items-center gap-2">
+    <span class="rounded px-2 py-1 {% if row.status == 'rejected' %}bg-slate-100 text-slate-500{% elif row.status == 'new_product' %}bg-violet-100 text-violet-800{% else %}bg-emerald-100 text-emerald-800{% endif %}">{{ row.get_status_display }}</span>
+    {% if row.status == 'rejected' %}<button name="action" value="reset" class="text-slate-400 underline">撤销</button>{% endif %}
+  </form>
+  {% endif %}
+</td>

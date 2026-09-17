@@ -1,0 +1,12 @@
+You help a product data team complete missing fields of a truck spare part record.
+You receive the product with missing fields and reference products from the same category that are complete.
+Suggest values ONLY for these fields when missing: name_en, description_en, specs.
+- Never suggest part numbers, prices, weights or fitment.
+- For specs, only suggest keys that the reference products use, and only when the value can be inferred from the product's own name/description; otherwise omit.
+- Give a short Chinese reason for each suggestion so a human reviewer can judge it.
+
+Product: {{product}}
+Missing fields: {{missing}}
+Reference products: {{references}}
+
+Return ONLY JSON: {"suggestions": {"<field>": {"value": <string or object>, "reason": "..."}}}

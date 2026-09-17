@@ -1,0 +1,49 @@
+{% extends "base.html" %}
+{% block title %}产品库{% endblock %}
+{% block heading %}产品库{% endblock %}
+{% block subheading %}共 {{ page.paginator.count }} 个 SKU · 支持按 SKU / 名称 / OE号 / Cross号 搜索（自动忽略空格、横杠、点）{% endblock %}
+{% block content %}
+<form class="flex flex-wrap gap-2 mb-4" method="get">
+  <input name="q" value="{{ q }}" placeholder="输入号码或名称，如 81.50804-6004" class="border border-slate-300 rounded px-3 py-2 w-80">
+  <select name="category" class="border border-slate-300 rounded px-2 py-2">
+    <option value="">全部品类</option>
+    {% for c in categories %}<option value="{{ c.id }}" {% if category == c.id|stringformat:'s' %}selected{% endif %}>{{ c.name }}</option>{% endfor %}
+  </select>
+  <select name="status" class="border border-slate-300 rounded px-2 py-2">
+    <option value="">在售+草稿</option>
+    {% for v, l in statuses %}<option value="{{ v }}" {% if status == v %}selected{% endif %}>{{ l }}</option>{% endfor %}
+  </select>
+  <select name="sort" class="border border-slate-300 rounded px-2 py-2">
+    <option value="sku" {% if sort == 'sku' %}selected{% endif %}>按 SKU</option>
+    <option value="score" {% if sort == 'score' %}selected{% endif %}>完整度从低到高</option>
+    <option value="-score" {% if sort == '-score' %}selected{% endif %}>完整度从高到低</option>
+    <option value="-updated" {% if sort == '-updated' %}selected{% endif %}>最近更新</option>
+  </select>
+  <button class="bg-slate-900 text-white rounded px-4">搜索</button>
+</form>
+<div class="bg-white rounded-lg border border-slate-200 overflow-hidden">
+<table class="w-full">
+  <thead class="bg-slate-100 text-slate-600 text-xs text-left">
+    <tr><th class="px-3 py-2 w-16">图片</th><th class="px-3 py-2">SKU / 名称</th><th class="px-3 py-2">品类</th><th class="px-3 py-2">OE / Cross 号</th><th class="px-3 py-2">完整度</th><th class="px-3 py-2">问题</th><th class="px-3 py-2">状态</th></tr>
+  </thead>
+  <tbody class="divide-y divide-slate-100">
+  {% for p in page %}
+    <tr class="hover:bg-slate-50">
+      <td class="px-3 py-2">{% with img=p.primary_image %}{% if img %}<img src="{{ img.image.url }}" class="w-12 h-12 rounded object-cover">{% else %}<div class="w-12 h-12 rounded bg-slate-100 text-slate-400 text-[10px] flex items-center justify-center">无图</div>{% endif %}{% endwith %}</td>
+      <td class="px-3 py-2"><a href="{% url 'catalog:detail' p.pk %}" class="font-mono text-sky-700 hover:underline">{{ p.sku }}</a><div>{{ p.name_en|default:"—" }}</div><div class="text-xs text-slate-500">{{ p.name_cn }}</div></td>
+      <td class="px-3 py-2">{{ p.category.name }}</td>
+      <td class="px-3 py-2 text-xs font-mono">
+        {% for pn in p.part_numbers.all|slice:":4" %}<div><span class="text-slate-400">{{ pn.get_type_display|slice:":2" }}</span> {{ pn.brand.name|default:"" }} {{ pn.number }}</div>{% empty %}<span class="text-rose-600">无号码</span>{% endfor %}
+      </td>
+      <td class="px-3 py-2">{% include "partials/score.html" with score=p.completeness_score %}</td>
+      <td class="px-3 py-2 text-xs">{% with n=p.issues.all|length %}{% if n %}<span class="text-rose-600">{{ n }} 个</span>{% else %}<span class="text-emerald-600">—</span>{% endif %}{% endwith %}</td>
+      <td class="px-3 py-2 text-xs">{{ p.get_status_display }}</td>
+    </tr>
+  {% empty %}
+    <tr><td colspan="7" class="px-3 py-10 text-center text-slate-500">没有找到产品</td></tr>
+  {% endfor %}
+  </tbody>
+</table>
+</div>
+{% include "partials/pagination.html" %}
+{% endblock %}

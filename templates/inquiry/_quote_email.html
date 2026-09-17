@@ -1,0 +1,9 @@
+<div class="bg-white rounded-lg border border-slate-200 p-4">
+  <div class="flex items-center justify-between mb-2">
+    <h2 class="font-semibold">报价邮件</h2>
+    <button onclick="navigator.clipboard.writeText(document.getElementById('email-text').value)" class="text-xs border border-slate-300 rounded px-2 py-1">复制</button>
+  </div>
+  {% for w in warnings %}<div class="text-xs text-amber-700 bg-amber-50 rounded px-2 py-1 mb-2">{{ w }}</div>{% endfor %}
+  <textarea id="email-text" rows="18" class="w-full border border-slate-200 rounded p-2 text-xs font-mono">{{ text }}</textarea>
+  <p class="text-[11px] text-slate-400 mt-1">价格、号码、数量均来自系统计算；AI 仅负责措辞，生成后已自动核对价格。</p>
+</div>

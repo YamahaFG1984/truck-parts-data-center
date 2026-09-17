@@ -1,0 +1,40 @@
+{% extends "base.html" %}
+{% block title %}上架文案{% endblock %}
+{% block heading %}✍️ 上架文案{% endblock %}
+{% block subheading %}基于标准产品数据生成 Alibaba / Shopify 英文标题、关键词、卖点、描述和 FAQ；只引用库内真实号码与规格{% endblock %}
+{% block actions %}<a href="{% url 'listing:export_shopify' %}" class="border border-slate-300 bg-white rounded px-3 py-1.5">⬇ 导出已确认 Shopify CSV</a>{% endblock %}
+{% block content %}
+<div class="grid grid-cols-3 gap-6 items-start">
+  <div class="col-span-2">
+    <div class="flex gap-2 text-xs mb-3">
+      <a href="?" class="rounded px-2 py-1 border {% if not platform %}bg-slate-900 text-white{% else %}bg-white{% endif %}">全部</a>
+      <a href="?platform=alibaba" class="rounded px-2 py-1 border {% if platform == 'alibaba' %}bg-slate-900 text-white{% else %}bg-white{% endif %}">Alibaba</a>
+      <a href="?platform=shopify" class="rounded px-2 py-1 border {% if platform == 'shopify' %}bg-slate-900 text-white{% else %}bg-white{% endif %}">Shopify</a>
+    </div>
+    <div class="bg-white rounded-lg border border-slate-200 divide-y divide-slate-100">
+      {% for l in listings %}
+      <a href="{% url 'listing:edit' l.pk %}" class="flex gap-3 p-3 hover:bg-slate-50">
+        {% with img=l.product.primary_image %}{% if img %}<img src="{{ img.image.url }}" class="w-12 h-12 rounded object-cover">{% endif %}{% endwith %}
+        <div class="flex-1 min-w-0">
+          <div class="font-medium truncate">{{ l.title }}</div>
+          <div class="text-xs text-slate-500">{{ l.product.sku }} · {{ l.get_platform_display }} · {{ l.get_status_display }} · {{ l.updated_at|date:"m-d H:i" }}{% if l.warnings %} · <span class="text-amber-600">{{ l.warnings|length }} 条提示</span>{% endif %}</div>
+        </div>
+      </a>
+      {% empty %}<div class="p-10 text-center text-slate-500">还没有文案，从右侧或产品详情页生成</div>{% endfor %}
+    </div>
+  </div>
+  <div class="bg-white rounded-lg border border-slate-200 p-4">
+    <h2 class="font-semibold mb-1">数据完整、可直接上架的 SKU</h2>
+    <p class="text-xs text-slate-500 mb-3">完整度 ≥ 85 且尚无文案 —— 先把数据补全，再批量上架</p>
+    <ul class="space-y-2 text-xs">
+      {% for p in ready %}
+      <li class="flex items-center gap-2">
+        <a class="font-mono text-sky-700" href="{% url 'catalog:detail' p.pk %}">{{ p.sku }}</a><span class="flex-1 truncate">{{ p.name_en }}</span>
+        <form method="post" action="{% url 'listing:generate' p.pk 'alibaba' %}">{% csrf_token %}<button class="bg-orange-500 text-white rounded px-1.5 py-0.5">Alibaba</button></form>
+        <form method="post" action="{% url 'listing:generate' p.pk 'shopify' %}">{% csrf_token %}<button class="bg-green-600 text-white rounded px-1.5 py-0.5">Shopify</button></form>
+      </li>
+      {% empty %}<li class="text-slate-400">暂无</li>{% endfor %}
+    </ul>
+  </div>
+</div>
+{% endblock %}

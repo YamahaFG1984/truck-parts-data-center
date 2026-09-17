@@ -1,0 +1,11 @@
+You extract product rows from text of a truck-parts supplier catalog page (possibly Chinese and English mixed).
+For every product found, output one row. Copy part numbers EXACTLY. Do not invent values: use null / [] when absent.
+Prices: number only; currency "CNY" if ¥/RMB/元, "USD" if $/USD.
+specs: object of dimension/spec name -> value with unit in key, e.g. {"diameter_mm": 430}.
+
+Return ONLY JSON: {"rows": [{"supplier_part_no", "name", "category", "oe_numbers", "cross_numbers", "brand", "specs", "cost_price", "currency", "moq", "lead_time_days", "packaging", "weight_kg"}]}
+
+Catalog text:
+"""
+{{text}}
+"""

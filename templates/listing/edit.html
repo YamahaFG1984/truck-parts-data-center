@@ -1,0 +1,32 @@
+{% extends "base.html" %}
+{% block title %}{{ listing.get_platform_display }} 文案 · {{ product.sku }}{% endblock %}
+{% block heading %}{{ listing.get_platform_display }} 文案 · <a class="font-mono text-sky-700" href="{% url 'catalog:detail' product.pk %}">{{ product.sku }}</a>{% endblock %}
+{% block subheading %}{{ product.name_en }} · 状态：{{ listing.get_status_display }}{% endblock %}
+{% block actions %}
+  <form method="post" action="{% url 'listing:generate' product.pk listing.platform %}">{% csrf_token %}<button class="border border-slate-300 bg-white rounded px-3 py-1.5">🔁 重新生成</button></form>
+{% endblock %}
+{% block content %}
+{% if listing.warnings %}
+<div class="bg-amber-50 border border-amber-200 rounded p-3 mb-4 text-xs text-amber-800 space-y-1">
+  <div class="font-semibold">自动校验提示</div>
+  {% for w in listing.warnings %}<div>• {{ w }}</div>{% endfor %}
+</div>
+{% endif %}
+<form method="post" class="bg-white rounded-lg border border-slate-200 p-5 space-y-4">
+  {% csrf_token %}
+  <label class="block"><span class="text-xs text-slate-500">标题（限制 {{ title_limit }} 字符，当前 <span id="title-len">{{ listing.title|length }}</span>）</span>
+    <input name="title" value="{{ listing.title }}" oninput="document.getElementById('title-len').textContent=this.value.length" class="mt-1 w-full border border-slate-300 rounded px-3 py-2"></label>
+  <label class="block"><span class="text-xs text-slate-500">关键词 / 标签（英文逗号分隔）</span>
+    <input name="keywords" value="{{ listing.keywords|join:', ' }}" class="mt-1 w-full border border-slate-300 rounded px-3 py-2"></label>
+  <label class="block"><span class="text-xs text-slate-500">卖点（每行一条）</span>
+    <textarea name="bullets" rows="6" class="mt-1 w-full border border-slate-300 rounded px-3 py-2">{{ listing.bullets|join:"&#10;" }}</textarea></label>
+  <label class="block"><span class="text-xs text-slate-500">描述</span>
+    <textarea name="description" rows="7" class="mt-1 w-full border border-slate-300 rounded px-3 py-2">{{ listing.description }}</textarea></label>
+  <label class="block"><span class="text-xs text-slate-500">FAQ（Q: / A: 格式，每组之间空一行）</span>
+    <textarea name="faq" rows="10" class="mt-1 w-full border border-slate-300 rounded px-3 py-2 font-mono text-xs">{{ faq_text }}</textarea></label>
+  <div class="flex gap-3">
+    <button class="border border-slate-300 rounded px-4 py-2">保存草稿</button>
+    <button name="confirm" value="1" class="bg-emerald-600 text-white rounded px-4 py-2">保存并确认</button>
+  </div>
+</form>
+{% endblock %}

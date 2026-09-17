@@ -1,0 +1,25 @@
+{% extends "base.html" %}
+{% block title %}{{ supplier.name }}{% endblock %}
+{% block heading %}{{ supplier.name }}{% endblock %}
+{% block subheading %}{{ supplier.region }} · 主营 {{ supplier.product_lines }} · 评级 {{ supplier.rating }}/5{% endblock %}
+{% block actions %}<a href="/admin/suppliers/supplier/{{ supplier.pk }}/change/" class="border border-slate-300 bg-white rounded px-3 py-1.5">后台编辑</a>{% endblock %}
+{% block content %}
+{% if batches %}
+<div class="bg-white rounded-lg border border-slate-200 p-4 mb-4 text-xs">
+  <span class="font-semibold mr-2">导入批次：</span>{% for b in batches %}<a class="text-sky-700 mr-3" href="{% url 'ingest:detail' b.pk %}">#{{ b.pk }} {{ b.get_status_display }}</a>{% endfor %}
+</div>
+{% endif %}
+<div class="bg-white rounded-lg border border-slate-200 overflow-hidden">
+<table class="w-full text-left text-xs">
+  <thead class="bg-slate-100 text-slate-600"><tr><th class="px-3 py-2">报价日期</th><th>供应商料号</th><th>产品</th><th>成本</th><th>MOQ</th><th>交期</th><th>包装</th><th>来源</th></tr></thead>
+  <tbody class="divide-y divide-slate-100">
+  {% for o in offers %}
+    <tr><td class="px-3 py-1.5">{{ o.quoted_at }}</td><td class="font-mono">{{ o.supplier_part_no }}</td>
+      <td>{% if o.product %}<a class="text-sky-700" href="{% url 'catalog:detail' o.product_id %}">{{ o.product.sku }}</a> {{ o.product.name_en }}{% endif %}</td>
+      <td>{{ o.cost_price }} {{ o.currency }}</td><td>{{ o.moq|default:"—" }}</td><td>{{ o.lead_time_days|default:"—" }} 天</td><td>{{ o.packaging }}</td>
+      <td>{% if o.source_import_row_id %}导入{% else %}历史{% endif %}</td></tr>
+  {% empty %}<tr><td colspan="8" class="px-3 py-10 text-center text-slate-500">暂无报价</td></tr>{% endfor %}
+  </tbody>
+</table>
+</div>
+{% endblock %}

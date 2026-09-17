@@ -1,0 +1,74 @@
+{% extends "base.html" %}{% load static ui %}
+{% block title %}数据质量{% endblock %}
+{% block head %}<script src="{% static 'vendor/chart.umd.min.js' %}"></script>{% endblock %}
+{% block heading %}🩺 数据质量看板{% endblock %}
+{% block subheading %}规则引擎自动排查缺失、重复、格式、一致性问题，并计算每个 SKU 的完整度评分{% endblock %}
+{% block actions %}
+  <form method="post" action="{% url 'quality:scan' %}">{% csrf_token %}<button class="bg-slate-900 text-white rounded px-3 py-1.5">🔄 重新扫描</button></form>
+{% endblock %}
+{% block content %}
+<div class="grid grid-cols-4 gap-4 mb-6">
+  <div class="bg-white rounded-lg border border-slate-200 p-4"><div class="text-xs text-slate-500">在库 SKU</div><div class="text-3xl font-bold mt-1">{{ total }}</div></div>
+  <div class="bg-white rounded-lg border border-slate-200 p-4"><div class="text-xs text-slate-500">平均完整度</div><div class="text-3xl font-bold mt-1 {% if avg_score < 80 %}text-amber-600{% else %}text-emerald-600{% endif %}">{{ avg_score }}</div></div>
+  <div class="bg-white rounded-lg border border-slate-200 p-4"><div class="text-xs text-slate-500">未解决问题</div><div class="text-3xl font-bold mt-1 text-rose-600">{{ issue_count }}</div></div>
+  <div class="bg-white rounded-lg border border-slate-200 p-4"><div class="text-xs text-slate-500">受影响 SKU</div><div class="text-3xl font-bold mt-1">{{ affected }}</div></div>
+</div>
+
+<div class="grid grid-cols-3 gap-4 mb-6">
+  <div class="bg-white rounded-lg border border-slate-200 p-4"><h2 class="font-semibold mb-2">问题分布</h2><div class="h-64"><canvas id="chart-rules"></canvas></div></div>
+  <div class="bg-white rounded-lg border border-slate-200 p-4"><h2 class="font-semibold mb-2">各品类平均完整度</h2><div class="h-64"><canvas id="chart-categories"></canvas></div></div>
+  <div class="bg-white rounded-lg border border-slate-200 p-4"><h2 class="font-semibold mb-2">完整度分布（SKU 数）</h2><div class="h-64"><canvas id="chart-buckets"></canvas></div></div>
+</div>
+
+<div class="bg-white rounded-lg border border-slate-200 p-4 mb-6">
+  <h2 class="font-semibold mb-3">一键修复（确定性规则，不经过 AI）</h2>
+  <div class="flex flex-wrap gap-3">
+    <form method="post" action="{% url 'quality:fix_units' %}">{% csrf_token %}<button class="border border-sky-600 text-sky-700 rounded px-3 py-1.5" {% if not fixable_units %}disabled class="opacity-50"{% endif %}>📏 规格单位标准化（{{ fixable_units }}）</button></form>
+    <form method="post" action="{% url 'quality:fix_numbers' %}">{% csrf_token %}<button class="border border-sky-600 text-sky-700 rounded px-3 py-1.5">🔢 清理号码多余空格（{{ fixable_numbers }}）</button></form>
+    <div class="text-xs text-slate-500 self-center">重复 SKU 需人工确认保留哪一个；缺失的描述可在问题行点「AI 补全」获取建议。</div>
+  </div>
+</div>
+
+<div class="grid grid-cols-4 gap-6">
+  <div class="bg-white rounded-lg border border-slate-200 p-4 h-fit">
+    <h2 class="font-semibold mb-2">规则</h2>
+    <ul class="text-xs space-y-1">
+      <li><a href="?" class="flex justify-between rounded px-2 py-1 {% if not rule_filter %}bg-slate-900 text-white{% else %}hover:bg-slate-100{% endif %}"><span>全部</span><span>{{ issue_count }}</span></a></li>
+      {% for x in rules %}
+      <li><a href="?rule={{ x.rule.code }}" class="flex justify-between rounded px-2 py-1 {% if rule_filter == x.rule.code %}bg-slate-900 text-white{% else %}hover:bg-slate-100{% endif %}">
+        <span><span class="inline-block w-2 h-2 rounded-full mr-1 {% if x.rule.severity == 'high' %}bg-rose-500{% elif x.rule.severity == 'medium' %}bg-amber-400{% else %}bg-slate-300{% endif %}"></span>{{ x.rule.title }}</span><span>{{ x.count }}</span></a></li>
+      {% endfor %}
+    </ul>
+  </div>
+  <div class="col-span-3 bg-white rounded-lg border border-slate-200 overflow-hidden h-fit">
+    <table class="w-full text-left text-xs">
+      <thead class="bg-slate-100 text-slate-600"><tr><th class="px-3 py-2">严重度</th><th>SKU</th><th>规则</th><th>说明</th><th>处理</th></tr></thead>
+      <tbody class="divide-y divide-slate-100">
+      {% for i in page %}
+        <tr>
+          <td class="px-3 py-2"><span class="rounded px-1.5 py-0.5 {{ i.severity|severity_class }}">{{ i.get_severity_display }}</span></td>
+          <td><a class="font-mono text-sky-700" href="{% url 'catalog:detail' i.product_id %}">{{ i.product.sku }}</a></td>
+          <td>{{ rule_titles|get_item:i.rule_code }}</td>
+          <td>{{ i.message }}</td>
+          <td class="pr-3">
+            {% if i.related_product_id %}<a class="text-sky-700" href="{% url 'quality:merge' i.product_id i.related_product_id %}">合并重复</a>
+            {% elif i.rule_code == 'MISSING_DESC_EN' or i.rule_code == 'FMT_NAME_EN_CJK' %}<a class="text-violet-700" href="{% url 'catalog:detail' i.product_id %}">AI 补全</a>
+            {% else %}<a class="text-sky-700" href="/admin/catalog/product/{{ i.product_id }}/change/">去编辑</a>{% endif %}
+          </td>
+        </tr>
+      {% empty %}<tr><td colspan="5" class="px-3 py-10 text-center text-emerald-600">没有问题 ✓</td></tr>{% endfor %}
+      </tbody>
+    </table>
+    <div class="px-3 pb-3">{% include "partials/pagination.html" %}</div>
+  </div>
+</div>
+{% endblock %}
+{% block scripts %}
+<script>
+const palette = ['#e11d48','#f59e0b','#0ea5e9','#8b5cf6','#10b981','#64748b','#f97316','#14b8a6','#6366f1','#84cc16','#ec4899','#a855f7'];
+const rules = {{ chart_rules|safe }}, cats = {{ chart_categories|safe }}, buckets = {{ chart_buckets|safe }};
+new Chart(document.getElementById('chart-rules'), {type: 'doughnut', data: {labels: rules.labels, datasets: [{data: rules.data, backgroundColor: palette}]}, options: {maintainAspectRatio: false, plugins: {legend: {position: 'right', labels: {boxWidth: 10, font: {size: 10}}}}}});
+new Chart(document.getElementById('chart-categories'), {type: 'bar', data: {labels: cats.labels, datasets: [{data: cats.data, backgroundColor: cats.data.map(v => v < 70 ? '#f59e0b' : v < 85 ? '#0ea5e9' : '#10b981')}]}, options: {indexAxis: 'y', maintainAspectRatio: false, plugins: {legend: {display: false}}, scales: {x: {min: 0, max: 100}}}});
+new Chart(document.getElementById('chart-buckets'), {type: 'bar', data: {labels: buckets.labels, datasets: [{data: buckets.data, backgroundColor: ['#e11d48','#f59e0b','#0ea5e9','#10b981']}]}, options: {maintainAspectRatio: false, plugins: {legend: {display: false}}}});
+</script>
+{% endblock %}

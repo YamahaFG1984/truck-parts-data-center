@@ -1,0 +1,5 @@
+<form hx-post="{% url 'inquiry:feedback' inquiry.pk line.pk %}" hx-target="#feedback-{{ line.pk }}" class="flex items-center gap-1 text-xs">
+  <span class="text-slate-400">匹配结果</span>
+  <button name="feedback" value="{% if line.feedback == 'correct' %}{% else %}correct{% endif %}" class="rounded px-2 py-1 border {% if line.feedback == 'correct' %}bg-emerald-600 text-white border-emerald-600{% else %}border-slate-300{% endif %}">👍 正确</button>
+  <button name="feedback" value="{% if line.feedback == 'wrong' %}{% else %}wrong{% endif %}" class="rounded px-2 py-1 border {% if line.feedback == 'wrong' %}bg-rose-600 text-white border-rose-600{% else %}border-slate-300{% endif %}">👎 错误</button>
+</form>

@@ -1,0 +1,8 @@
+<div class="bg-white rounded-lg border border-slate-200 p-5 grid grid-cols-2 gap-3 text-center">
+  <div><div class="text-2xl font-bold">{{ batch.stats.total|default:0 }}</div><div class="text-xs text-slate-500">总行数</div></div>
+  <div><div class="text-2xl font-bold text-sky-700">{{ batch.stats.matched|default:0 }}</div><div class="text-xs text-slate-500">匹配到已有 SKU</div></div>
+  <div><div class="text-2xl font-bold text-emerald-700">{{ batch.stats.approved|default:0 }}</div><div class="text-xs text-slate-500">已通过</div></div>
+  <div><div class="text-2xl font-bold text-violet-700">{{ batch.stats.new_product|default:0 }}</div><div class="text-xs text-slate-500">新建 SKU</div></div>
+  <div><div class="text-2xl font-bold text-slate-500">{{ batch.stats.rejected|default:0 }}</div><div class="text-xs text-slate-500">驳回</div></div>
+  <div><div class="text-2xl font-bold text-amber-600">{{ batch.stats.pending|default:0 }}</div><div class="text-xs text-slate-500">待审核</div></div>
+</div>

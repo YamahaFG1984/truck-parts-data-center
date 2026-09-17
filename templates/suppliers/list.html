@@ -1,0 +1,17 @@
+{% extends "base.html" %}
+{% block title %}供应商{% endblock %}
+{% block heading %}🏭 供应商{% endblock %}
+{% block subheading %}产品线、报价记录、质量评级{% endblock %}
+{% block content %}
+<div class="bg-white rounded-lg border border-slate-200 overflow-hidden">
+<table class="w-full text-left">
+  <thead class="bg-slate-100 text-xs text-slate-600"><tr><th class="px-3 py-2">供应商</th><th>地区</th><th>主营</th><th>评级</th><th>报价条数</th><th>覆盖 SKU</th><th>最近报价</th></tr></thead>
+  <tbody class="divide-y divide-slate-100">
+  {% for s in suppliers %}
+    <tr class="hover:bg-slate-50"><td class="px-3 py-2"><a class="text-sky-700" href="{% url 'suppliers:detail' s.pk %}">{{ s.name }}</a></td><td>{{ s.region }}</td>
+      <td class="text-xs">{{ s.product_lines }}</td><td>{% for _ in "x"|rjust:s.rating %}★{% endfor %}</td><td>{{ s.offer_count }}</td><td>{{ s.product_count }}</td><td>{{ s.last_quote|default:"—" }}</td></tr>
+  {% endfor %}
+  </tbody>
+</table>
+</div>
+{% endblock %}

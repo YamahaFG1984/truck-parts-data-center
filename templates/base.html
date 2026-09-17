@@ -1,0 +1,65 @@
+{% load static %}<!doctype html>
+<html lang="zh-CN">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>{% block title %}卡车配件 AI 数据中心{% endblock %}</title>
+  <script src="{% static 'vendor/tailwindcss.js' %}"></script>
+  <script src="{% static 'vendor/htmx.min.js' %}" defer></script>
+  <style>
+    .htmx-indicator{display:none}.htmx-request .htmx-indicator,.htmx-request.htmx-indicator{display:inline-flex}
+    .htmx-request.btn-loading{opacity:.6;pointer-events:none}
+  </style>
+  {% block head %}{% endblock %}
+</head>
+<body class="bg-slate-50 text-slate-800 text-sm" hx-headers='{"X-CSRFToken": "{{ csrf_token }}"}'>
+<div class="flex min-h-screen">
+  <aside class="w-56 shrink-0 bg-slate-900 text-slate-300 flex flex-col">
+    <a href="{% url 'core:dashboard' %}" class="px-5 py-5 block">
+      <div class="text-white font-bold text-base leading-tight">🚚 卡车配件<br>AI 数据中心</div>
+      <div class="text-xs text-slate-400 mt-1">Truck Parts Data Center</div>
+    </a>
+    {% with p=request.path %}
+    <nav class="flex-1 px-3 space-y-1">
+      {% url 'core:dashboard' as u %}<a href="{{ u }}" class="block rounded px-3 py-2 {% if p == u %}bg-slate-700 text-white{% else %}hover:bg-slate-800{% endif %}">📊 总览</a>
+      {% url 'inquiry:workbench' as u %}<a href="{{ u }}" class="block rounded px-3 py-2 {% if u in p %}bg-slate-700 text-white{% else %}hover:bg-slate-800{% endif %}">⚡ 询价工作台</a>
+      {% url 'catalog:list' as u %}<a href="{{ u }}" class="block rounded px-3 py-2 {% if u in p %}bg-slate-700 text-white{% else %}hover:bg-slate-800{% endif %}">📦 产品库</a>
+      {% url 'ingest:list' as u %}<a href="{{ u }}" class="block rounded px-3 py-2 {% if u in p %}bg-slate-700 text-white{% else %}hover:bg-slate-800{% endif %}">📥 供应商资料入库</a>
+      {% url 'quality:dashboard' as u %}<a href="{{ u }}" class="block rounded px-3 py-2 {% if u in p %}bg-slate-700 text-white{% else %}hover:bg-slate-800{% endif %}">🩺 数据质量</a>
+      {% url 'listing:list' as u %}<a href="{{ u }}" class="block rounded px-3 py-2 {% if u in p %}bg-slate-700 text-white{% else %}hover:bg-slate-800{% endif %}">✍️ 上架文案</a>
+      {% url 'suppliers:list' as u %}<a href="{{ u }}" class="block rounded px-3 py-2 {% if u in p %}bg-slate-700 text-white{% else %}hover:bg-slate-800{% endif %}">🏭 供应商</a>
+      <div class="pt-4 mt-4 border-t border-slate-700 text-xs text-slate-500 px-3">经验沉淀</div>
+      <a href="/admin/ai/prompttemplate/" class="block rounded px-3 py-2 hover:bg-slate-800">🧩 提示词模板</a>
+      <a href="/admin/ai/aicalllog/" class="block rounded px-3 py-2 hover:bg-slate-800">🧾 AI 调用日志</a>
+      <a href="/admin/" class="block rounded px-3 py-2 hover:bg-slate-800">⚙️ 后台管理</a>
+    </nav>
+    {% endwith %}
+    <div class="p-4 text-xs space-y-1 border-t border-slate-800">
+      <div><span class="inline-block rounded bg-amber-400 text-slate-900 px-1.5 font-semibold">DEMO DATA</span></div>
+      <div class="text-slate-400">号码均为按格式生成的虚构数据</div>
+      <div class="pt-1">AI：{% if AI_MOCK %}<span class="text-amber-300">Mock 离线模式</span>{% else %}<span class="text-emerald-300">{{ LLM_MODEL }}</span>{% endif %}</div>
+    </div>
+  </aside>
+  <main class="flex-1 min-w-0">
+    <header class="bg-white border-b border-slate-200 px-8 py-4 flex items-center justify-between gap-4">
+      <div>
+        <h1 class="text-lg font-semibold text-slate-900">{% block heading %}{% endblock %}</h1>
+        <p class="text-slate-500 text-xs mt-0.5">{% block subheading %}{% endblock %}</p>
+      </div>
+      <div class="flex items-center gap-2">{% block actions %}{% endblock %}</div>
+    </header>
+    <div class="px-8 py-6">
+      {% if messages %}
+      <div class="space-y-2 mb-4">
+        {% for m in messages %}
+        <div class="rounded border px-4 py-2 {% if m.tags == 'error' %}bg-rose-50 border-rose-200 text-rose-800{% else %}bg-emerald-50 border-emerald-200 text-emerald-800{% endif %}">{{ m }}</div>
+        {% endfor %}
+      </div>
+      {% endif %}
+      {% block content %}{% endblock %}
+    </div>
+  </main>
+</div>
+{% block scripts %}{% endblock %}
+</body>
+</html>

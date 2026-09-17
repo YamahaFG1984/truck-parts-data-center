@@ -1,0 +1,32 @@
+[project]
+name = "truck-parts-data-center"
+version = "0.1.0"
+description = "AI product data center MVP for a truck parts export company"
+requires-python = ">=3.12"
+dependencies = [
+    "django>=5.2,<5.3",
+    "psycopg[binary]>=3.2",
+    "pgvector>=0.3",
+    "django-environ>=0.11",
+    "django-q2>=1.7",
+    "django-import-export>=4.0",
+    "openai>=1.50",
+    "pydantic>=2.8",
+    "pandas>=2.2",
+    "openpyxl>=3.1",
+    "pdfplumber>=0.11",
+    "rapidfuzz>=3.9",
+    "pillow>=10.4",
+    "reportlab>=4.2",
+]
+
+[dependency-groups]
+dev = ["pytest>=8", "pytest-django>=4.9"]
+
+[tool.uv]
+package = false
+
+[tool.pytest.ini_options]
+DJANGO_SETTINGS_MODULE = "config.settings"
+python_files = ["test_*.py"]
+testpaths = ["tests"]

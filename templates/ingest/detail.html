@@ -1,0 +1,47 @@
+{% extends "base.html" %}
+{% block title %}导入批次 #{{ batch.pk }}{% endblock %}
+{% block heading %}导入批次 #{{ batch.pk }} · {{ batch.supplier.name }}{% endblock %}
+{% block subheading %}{{ batch.file.name|cut:"imports/" }} · {{ batch.created_at|date:"Y-m-d H:i" }}{% endblock %}
+{% block actions %}
+  {% include "ingest/_status.html" with status=batch.status label=batch.get_status_display %}
+  <form method="post" action="{% url 'ingest:reprocess' batch.pk %}">{% csrf_token %}<button class="border border-slate-300 rounded px-3 py-1.5 bg-white text-xs" onclick="return confirm('重新解析会清空当前审核结果，确定？')">重新解析</button></form>
+{% endblock %}
+{% block content %}
+{% if batch.status == 'uploaded' or batch.status == 'parsing' %}
+  <div hx-get="{% url 'ingest:detail' batch.pk %}?progress=1" hx-trigger="every 2s" hx-swap="innerHTML">{% include "ingest/_progress.html" %}</div>
+{% else %}
+<div class="grid grid-cols-3 gap-6 mb-6">
+  <div class="col-span-2 bg-white rounded-lg border border-slate-200 p-5">
+    <h2 class="font-semibold mb-3">AI 列映射结果</h2>
+    <div class="flex flex-wrap gap-2 text-xs">
+      {% for header, field in batch.column_mapping.items %}
+        <span class="border border-slate-200 rounded px-2 py-1"><span class="text-slate-500">{{ header }}</span> → <span class="font-mono text-sky-700">{{ field }}</span></span>
+      {% empty %}<span class="text-slate-500">无表格列（PDF 文本逐段抽取）</span>{% endfor %}
+    </div>
+    <pre class="mt-4 text-xs bg-slate-50 rounded p-3 whitespace-pre-wrap text-slate-600">{{ batch.log }}</pre>
+  </div>
+  <div id="batch-stats" hx-get="{% url 'ingest:stats' batch.pk %}" hx-trigger="batchChanged from:body">{% include "ingest/_stats.html" %}</div>
+</div>
+
+<div class="flex items-center justify-between mb-3">
+  <div class="flex gap-2 text-xs">
+    <a href="?" class="rounded px-2 py-1 border {% if not status_filter %}bg-slate-900 text-white{% else %}bg-white{% endif %}">全部</a>
+    {% for v, l in row_statuses %}<a href="?status={{ v }}" class="rounded px-2 py-1 border {% if status_filter == v %}bg-slate-900 text-white{% else %}bg-white{% endif %}">{{ l }}</a>{% endfor %}
+  </div>
+  <form method="post" action="{% url 'ingest:bulk_approve' batch.pk %}">{% csrf_token %}
+    <button class="bg-emerald-600 text-white rounded px-3 py-1.5 text-xs">✔ 批量通过高置信度匹配（≥95）</button>
+  </form>
+</div>
+<div class="bg-white rounded-lg border border-slate-200 overflow-hidden">
+  <table class="w-full text-left text-xs">
+    <thead class="bg-slate-100 text-slate-600"><tr>
+      <th class="px-3 py-2 w-10">行</th><th class="w-1/4">原始数据</th><th class="w-1/4">AI 抽取（标准字段）</th><th>匹配 SKU</th><th class="w-56">审核</th>
+    </tr></thead>
+    <tbody class="divide-y divide-slate-100">
+      {% for row in rows %}<tr id="row-{{ row.pk }}" class="align-top">{% include "ingest/_row.html" %}</tr>{% empty %}
+      <tr><td colspan="5" class="px-3 py-10 text-center text-slate-500">没有数据行</td></tr>{% endfor %}
+    </tbody>
+  </table>
+</div>
+{% endif %}
+{% endblock %}

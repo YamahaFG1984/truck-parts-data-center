@@ -1,0 +1,47 @@
+{% extends "base.html" %}
+{% block title %}供应商资料入库{% endblock %}
+{% block heading %}📥 供应商资料 AI 入库{% endblock %}
+{% block subheading %}上传供应商 Excel / PDF 报价单或目录 → AI 识别列含义并抽取标准字段 → 自动匹配 FIT SKU → 人工审核后写入产品库{% endblock %}
+{% block content %}
+<div class="grid grid-cols-3 gap-6 items-start">
+  <form method="post" enctype="multipart/form-data" class="bg-white rounded-lg border border-slate-200 p-5 space-y-4">
+    {% csrf_token %}
+    <h2 class="font-semibold">新建导入</h2>
+    <label class="block"><span class="text-xs text-slate-500">供应商</span>
+      <select name="supplier" class="mt-1 w-full border border-slate-300 rounded px-3 py-2" required>
+        {% for s in suppliers %}<option value="{{ s.pk }}">{{ s.name }}</option>{% endfor %}
+      </select></label>
+    <label class="block"><span class="text-xs text-slate-500">上传文件（xlsx / csv / pdf）</span>
+      <input type="file" name="file" class="mt-1 block w-full text-xs"></label>
+    {% if demo_files %}
+    <label class="block"><span class="text-xs text-slate-500">或使用演示文件</span>
+      <select name="demo_file" class="mt-1 w-full border border-slate-300 rounded px-3 py-2">
+        <option value="">— 不使用 —</option>
+        {% for f in demo_files %}<option value="{{ f }}">{{ f }}</option>{% endfor %}
+      </select></label>
+    {% endif %}
+    <button class="w-full bg-sky-600 text-white rounded px-4 py-2">上传并解析</button>
+    <div class="text-xs text-slate-500 bg-slate-50 rounded p-3 space-y-1">
+      <div>• 自动定位表头（跳过标题、联系人等行）</div>
+      <div>• 中英文表头均可，列顺序不限</div>
+      <div>• 整个文件只调用一次 AI 做列映射，逐行转换由程序完成，省钱且结果稳定</div>
+    </div>
+  </form>
+  <div class="col-span-2 bg-white rounded-lg border border-slate-200 overflow-hidden">
+    <table class="w-full text-left">
+      <thead class="bg-slate-100 text-xs text-slate-600"><tr><th class="px-3 py-2">批次</th><th>供应商</th><th>文件</th><th>状态</th><th>行数</th><th>已匹配</th><th>待审核</th><th>时间</th></tr></thead>
+      <tbody class="divide-y divide-slate-100">
+      {% for b in batches %}
+        <tr class="hover:bg-slate-50">
+          <td class="px-3 py-2"><a class="text-sky-700" href="{% url 'ingest:detail' b.pk %}">#{{ b.pk }}</a></td>
+          <td class="text-xs">{{ b.supplier.name }}</td><td class="text-xs">{{ b.file.name|cut:"imports/" }}</td>
+          <td>{% include "ingest/_status.html" with status=b.status label=b.get_status_display %}</td>
+          <td>{{ b.stats.total|default:"—" }}</td><td>{{ b.stats.matched|default:"—" }}</td><td>{{ b.stats.pending|default:"—" }}</td>
+          <td class="text-xs">{{ b.created_at|date:"m-d H:i" }}</td>
+        </tr>
+      {% empty %}<tr><td colspan="8" class="px-3 py-10 text-center text-slate-500">还没有导入批次</td></tr>{% endfor %}
+      </tbody>
+    </table>
+  </div>
+</div>
+{% endblock %}

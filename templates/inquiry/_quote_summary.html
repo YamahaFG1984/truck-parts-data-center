@@ -1,0 +1,17 @@
+<div class="bg-white rounded-lg border border-slate-200 p-4">
+  <h2 class="font-semibold mb-2">报价汇总</h2>
+  {% if items %}
+  <table class="w-full text-xs">
+    <thead class="text-slate-500 text-left"><tr><th class="py-1">SKU</th><th>数量</th><th class="text-right">单价</th><th class="text-right">小计</th></tr></thead>
+    <tbody class="divide-y divide-slate-100">
+      {% for it in items %}<tr><td class="py-1 font-mono">{{ it.sku }}</td><td>{{ it.qty }}</td><td class="text-right">{{ it.unit_price }}</td><td class="text-right">{{ it.subtotal }}</td></tr>{% endfor %}
+    </tbody>
+  </table>
+  <div class="flex gap-2 mt-4">
+    <button hx-post="{% url 'inquiry:quote_email' inquiry.pk %}" hx-target="#quote-email" class="flex-1 bg-sky-600 text-white rounded px-3 py-2 btn-loading">✉️ 生成英文报价邮件<span class="htmx-indicator ml-1">…</span></button>
+    <a href="{% url 'inquiry:quote_pdf' inquiry.pk %}" target="_blank" class="border border-slate-300 rounded px-3 py-2">📄 报价单 PDF</a>
+  </div>
+  {% else %}
+  <p class="text-xs text-slate-500">在左侧为每行选择产品（置信度 ≥ 80 已自动选中）</p>
+  {% endif %}
+</div>
